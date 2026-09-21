@@ -24,6 +24,19 @@ The system recognizes five hand gestures:
 - Two
 - Thumbs Up
 
+## 🔄 Project Workflow
+
+The system works through the following pipeline:
+
+1. Webcam captures the user's hand.
+2. MediaPipe detects 21 hand landmarks.
+3. Landmark coordinates are extracted as numerical features.
+4. Feature engineering normalizes the landmark data.
+5. Machine Learning models classify the hand gesture.
+6. The predicted gesture and confidence score are displayed in real time.
+7. Prediction results are stored in a CSV log file.
+8. Streamlit dashboard visualizes prediction history and confidence levels.
+
 ## 🧠 Technologies Used
 
 - Python
@@ -37,23 +50,6 @@ The system recognizes five hand gestures:
 - Joblib
 - Matplotlib / Altair
 
-## 🔄 Project Workflow
-
-Webcam
-↓
-Hand Detection
-↓
-21 Hand Landmarks
-↓
-Feature Engineering
-↓
-Machine Learning Model
-↓
-Real-Time Gesture Prediction
-↓
-Prediction Logging
-↓
-Streamlit Dashboard
 
 ## 📊 Dataset
 

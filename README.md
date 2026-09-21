@@ -2,6 +2,12 @@
 
 An end-to-end AI and Machine Learning project for real-time hand gesture recognition using computer vision.
 
+## 🚀 Live Demo
+
+Try the deployed application here:
+
+https://ai-vision-intelligence.streamlit.app/
+
 ## 📌 Project Overview
 
 The AI Vision Intelligence System detects hand gestures in real time using a webcam. It uses MediaPipe to detect 21 hand landmarks and a Machine Learning model to classify different hand gestures.

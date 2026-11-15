@@ -49,6 +49,15 @@ if not LOG_PATH.exists():
 
 df = pd.read_csv(LOG_PATH)
 
+required_columns = {"timestamp", "gesture", "confidence"}
+missing_columns = sorted(required_columns.difference(df.columns))
+if missing_columns:
+    st.error(
+        "Prediction log is missing required columns: "
+        + ", ".join(missing_columns)
+    )
+    st.stop()
+
 
 # ============================================================
 # CHECK DATA
@@ -74,6 +83,23 @@ df["timestamp"] = pd.to_datetime(
     df["timestamp"],
     errors="coerce"
 )
+
+valid_rows = (
+    df["gesture"].notna()
+    & df["gesture"].astype(str).str.strip().ne("")
+    & df["confidence"].between(0, 100)
+    & df["timestamp"].notna()
+)
+invalid_count = int((~valid_rows).sum())
+if invalid_count:
+    st.warning(
+        f"Ignored {invalid_count} invalid prediction log row(s)."
+    )
+df = df.loc[valid_rows].copy()
+
+if df.empty:
+    st.info("No valid prediction records are available yet.")
+    st.stop()
 
 
 # ============================================================
@@ -167,7 +193,7 @@ recent_data = df.tail(20).iloc[::-1]
 
 st.dataframe(
     recent_data,
-    use_container_width=True
+    width='stretch'
 )
 
 

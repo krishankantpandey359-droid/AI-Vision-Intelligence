@@ -1,192 +1,134 @@
 # AI Vision Intelligence System
 
-An end-to-end AI and Machine Learning project for real-time hand gesture recognition using computer vision.
+Hand gesture recognition using MediaPipe hand landmarks and a Random Forest classifier, with a Streamlit analytics dashboard.
 
-## 🚀 Live Demo
+## Project status and scope
 
-Try the deployed application here:
+- Five gesture classes: `fist`, `open_palm`, `one`, `two`, and `thumbs_up`.
+- The engineered feature dataset currently contains 1,000 rows, 63 landmark features, and 200 rows per class.
+- `data/gesture_landmarks.csv` is currently empty. The original raw data has not been recreated or replaced. Therefore, feature engineering cannot currently be rerun from the repository's raw input.
+- The existing engineered feature CSV and trained model are retained. The model's training provenance and performance need to be re-established from raw samples before claiming a fully reproducible training pipeline.
+- Automated CI checks validate the dataset loader, shared inference preprocessing, Python compilation, and a Streamlit dashboard smoke test.
+- Automated tests do not verify physical webcam access or real-world gesture accuracy.
 
-https://ai-vision-intelligence.streamlit.app/
+## Gesture pipeline
 
-## 📌 Project Overview
-
-The AI Vision Intelligence System detects hand gestures in real time using a webcam. It uses MediaPipe to detect 21 hand landmarks and a Machine Learning model to classify different hand gestures.
-
-The system also records prediction results and provides an interactive Streamlit dashboard for analyzing gesture predictions and confidence levels.
-
-## 🎯 Gesture Classes
-
-The system recognizes five hand gestures:
-
-- Fist
-- Open Palm
-- One
-- Two
-- Thumbs Up
-
-## 🔄 Project Workflow
-
-The system works through the following pipeline:
-
-1. Webcam captures the user's hand.
+1. Capture a hand image using a local webcam.
 2. MediaPipe detects 21 hand landmarks.
-3. Landmark coordinates are extracted as numerical features.
-4. Feature engineering normalizes the landmark data.
-5. Machine Learning models classify the hand gesture.
-6. The predicted gesture and confidence score are displayed in real time.
-7. Prediction results are stored in a CSV log file.
-8. Streamlit dashboard visualizes prediction history and confidence levels.
+3. Convert each landmark to wrist-relative coordinates and scale-normalize the 63 values.
+4. Pass the feature row to the trained Random Forest model.
+5. Display the predicted gesture and confidence in the webcam window.
+6. Append timestamped predictions to `logs/predictions.csv`.
+7. Review prediction history in the Streamlit dashboard.
 
-## 🧠 Technologies Used
+The live inference path and training feature engineering now use the same normalization definition. The shared implementation is in `src/feature_utils.py`.
 
-- Python
-- OpenCV
-- MediaPipe
-- Pandas
-- NumPy
-- Scikit-learn
-- Random Forest
-- Streamlit
-- Joblib
-- Matplotlib / Altair
+## Dataset
 
+Each sample has 21 landmarks, each with X, Y, and Z coordinates, for 63 numerical features plus a `label` column.
 
-## 📊 Dataset
+Current engineered dataset:
 
-The system uses 21 hand landmarks.
+| Property | Current value |
+|---|---:|
+| Samples | 1,000 |
+| Features per sample | 63 |
+| Gesture classes | 5 |
+| Samples per class | 200 |
 
-Each landmark contains:
+The raw landmark file is empty at present. Do not run `src/feature_engineering.py` until new raw samples have been collected. The script intentionally refuses an empty input and leaves the existing engineered dataset unchanged.
 
-- X coordinate
-- Y coordinate
-- Z coordinate
+## Machine learning
 
-This produces 63 numerical features for each hand sample.
+The project contains scripts to compare Logistic Regression, K-Nearest Neighbors, Random Forest, and Support Vector Machine models. The deployed live prediction script loads `models/gesture_random_forest.pkl`.
 
-The collected dataset contains 1000 samples across five gesture classes.
+Do not treat the model's probability output as a calibrated measure of real-world correctness. A high confidence score is not a substitute for an independently measured test-set result.
 
-## ⚙️ Feature Engineering
+## Setup
 
-The landmark coordinates are transformed using:
+Use Python 3.11 in a virtual environment.
 
-- Wrist-relative coordinates
-- Scale normalization
-- Numerical feature extraction
+```bash
+python -m venv venv
+```
 
-This helps make the model less dependent on hand position and distance from the camera.
+Windows activation:
 
-## 🤖 Machine Learning Models
+```powershell
+venv\Scripts\activate
+```
 
-Multiple classification algorithms were evaluated:
+Install the dependencies:
 
-- Logistic Regression
-- K-Nearest Neighbors
-- Random Forest
-- Support Vector Machine
+```bash
+pip install -r requirements.txt
+```
 
-Random Forest was selected for the real-time prediction system.
+## Run
 
-## 📈 Real-Time Prediction
+Live webcam prediction (requires a working camera and the MediaPipe task asset):
 
-The trained model predicts gestures from live webcam input and displays:
+```bash
+python src/predict_live.py
+```
 
-- Predicted gesture
-- Prediction confidence
-- Hand landmarks
+Streamlit analytics dashboard:
 
-Predictions are also stored in a CSV log file.
+```bash
+streamlit run dashboard/app.py
+```
 
-## 📊 Streamlit Dashboard
+The dashboard reads the committed prediction log. It does not itself access the webcam.
 
-The project includes an interactive dashboard that displays:
+## Tests
 
-- Total predictions
-- Average confidence
-- Most detected gesture
-- Latest gesture
-- Gesture distribution
-- Confidence analysis
-- Recent predictions
+Install test dependencies and run:
 
-## 📁 Project Structure
+```bash
+python -m pip install pandas numpy scikit-learn streamlit pytest
+pytest -q tests/
+```
+
+GitHub Actions also compiles the Python sources, runs the tests, and smoke-tests the Streamlit dashboard on relevant pull requests and pushes.
+
+Latest successful CI run for shared live preprocessing: [GitHub Actions run](https://github.com/krishankantpandey359-droid/AI-Vision-Intelligence/actions/runs/43725303095).
+
+## Repository structure
 
 ```text
-AI Vision Intelligence/
-│
+.
 ├── dashboard/
 │   └── app.py
-│
 ├── data/
-│   ├── gesture_landmarks.csv
-│   └── gesture_features.csv
-│
+│   ├── gesture_features.csv
+│   └── gesture_landmarks.csv
 ├── logs/
 │   └── predictions.csv
-│
 ├── models/
-│   └── gesture_random_forest.pkl
-│
-├── notebooks/
-│
-├── outputs/
-│
+│   ├── gesture_random_forest.pkl
+│   └── hand_landmarker.task
 ├── src/
-│   ├── camera_test.py
-│   ├── collect_data.py
-│   ├── evaluate_models.py
-│   ├── extract_landmarks.py
+│   ├── dataset_utils.py
+│   ├── feature_utils.py
 │   ├── feature_engineering.py
-│   ├── predict_live.py
-│   ├── save_model.py
 │   ├── train_models.py
-│   └── train_test_split.py
-│
-├── .gitignore
-├── README.md
-└── requirements.txt
+│   ├── evaluate_models.py
+│   ├── save_model.py
+│   ├── predict_live.py
+│   └── camera_test.py
+└── tests/
+    └── test_dataset_utils.py
+```
 
+## Known limitations and next validation steps
 
-🚀 How to Run
-1. Create and activate virtual environment
-python -m venv venv
+- Collect and preserve a new raw landmark dataset before rerunning feature engineering and model training.
+- Re-train the model from the documented raw data and record a held-out classification report and confusion matrix.
+- Run a real webcam session on a supported local machine. Hardware access is not available in GitHub-hosted CI.
+- Validate the Streamlit deployment separately. A successful local smoke test does not prove the hosted URL is live.
+- Review dependency compatibility for the local webcam stack before changing pinned package versions.
+- Obtain an independent security and privacy review before collecting or publishing identifiable camera data.
 
-Activate it on Windows:
-venv\Scripts\activate
+## Author
 
-2. Install dependencies
-pip install -r requirements.txt
-
-3. Run real-time prediction
-python .\src\predict_live.py
-
-4. Run the Streamlit dashboard
-streamlit run .\dashboard\app.py
-
-
-💡 Key Features
-
-Real-time hand detection
-21-point hand landmark extraction
-Feature engineering
-Multiple ML model comparison
-Random Forest classification
-Confidence-based prediction
-Prediction logging
-Interactive analytics dashboard
-Modular project structure
-
-🔮 Future Improvements
-Add more hand gestures
-Improve low-confidence predictions
-Add model performance visualization
-Deploy the Streamlit application
-Add automatic model retraining
-Support multiple hands
-Add gesture-based application controls
-
-👩‍💻 Author
-
-Srishti Pandey
-MCA | Data Science
-
-AI & Machine Learning Project
+Srishti Pandey, MCA Data Science

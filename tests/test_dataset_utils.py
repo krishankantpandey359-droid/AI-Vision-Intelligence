@@ -81,3 +81,41 @@ def test_live_feature_normalization_rejects_non_finite_coordinates():
     landmarks[4].x = float("nan")
     with pytest.raises(ValueError, match="finite"):
         normalize_landmarks(landmarks)
+
+def test_raw_landmarks_reproduce_committed_engineered_features():
+    import numpy as np
+
+    raw_path = PROJECT_ROOT / "data" / "gesture_landmarks.csv"
+    engineered_path = PROJECT_ROOT / "data" / "gesture_features.csv"
+    raw = pd.read_csv(raw_path)
+    engineered = pd.read_csv(engineered_path)
+
+    assert raw.shape == (1000, 64)
+    assert engineered.shape == (1000, 64)
+    assert raw["label"].astype(str).tolist() == engineered["label"].astype(str).tolist()
+    assert raw["label"].value_counts().to_dict() == {
+        "fist": 200,
+        "open_palm": 200,
+        "one": 200,
+        "two": 200,
+        "thumbs_up": 200,
+    }
+
+    raw_values = raw[EXPECTED_FEATURE_COLUMNS].apply(
+        pd.to_numeric, errors="raise"
+    ).to_numpy(dtype=float)
+    expected_rows = []
+    for sample in raw_values:
+        points = sample.reshape(21, 3)
+        normalized = points - points[0]
+        scale = np.linalg.norm(normalized, axis=1).max()
+        if scale > 0:
+            normalized = normalized / scale
+        expected_rows.append(normalized.reshape(-1))
+
+    actual = engineered[EXPECTED_FEATURE_COLUMNS].apply(
+        pd.to_numeric, errors="raise"
+    ).to_numpy(dtype=float)
+    np.testing.assert_allclose(
+        actual, np.asarray(expected_rows), rtol=0, atol=1e-7
+    )

@@ -1,11 +1,12 @@
 import cv2
 import mediapipe as mp
 import pandas as pd
-import os
 import time
+from pathlib import Path
 
-MODEL_PATH = "models/hand_landmarker.task"
-DATA_PATH = "data/gesture_landmarks.csv"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+MODEL_PATH = PROJECT_ROOT / "models" / "hand_landmarker.task"
+DATA_PATH = PROJECT_ROOT / "data" / "gesture_landmarks.csv"
 
 # Gesture classes
 GESTURES = {
@@ -22,14 +23,14 @@ HandLandmarker = mp.tasks.vision.HandLandmarker
 HandLandmarkerOptions = mp.tasks.vision.HandLandmarkerOptions
 
 options = HandLandmarkerOptions(
-    base_options=BaseOptions(model_asset_path=MODEL_PATH),
+    base_options=BaseOptions(model_asset_path=str(MODEL_PATH)),
     num_hands=1
 )
 
 landmarker = HandLandmarker.create_from_options(options)
 
 # Create data folder if needed
-os.makedirs("data", exist_ok=True)
+DATA_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 # Create column names
 columns = []
@@ -44,7 +45,7 @@ for i in range(21):
 columns.append("label")
 
 # Load existing data if available
-if os.path.exists(DATA_PATH):
+if DATA_PATH.exists():
     df = pd.read_csv(DATA_PATH)
 else:
     df = pd.DataFrame(columns=columns)

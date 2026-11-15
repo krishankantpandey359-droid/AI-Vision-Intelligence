@@ -36,8 +36,7 @@ def load_feature_dataset():
     )
     # Wrist-relative normalization makes the anchor landmark exactly (0, 0, 0).
     # One existing feature row has a blank x_0; normalize that known anchor only.
-    anchor_columns = ["x_0", "y_0", "z_0"]
-    features[anchor_columns] = features[anchor_columns].fillna(0)
+    features["x_0"] = features["x_0"].fillna(0)
     if features.isna().any().any():
         raise ValueError(
             "Feature dataset contains missing or non-numeric landmark values."

@@ -256,6 +256,10 @@ with HandLandmarker.create_from_options(options) as landmarker:
             last_prediction = (
                 smoothed_prediction
             )
+            # Report the probability of the displayed smoothed class,
+            # not the unrelated maximum probability of the raw frame class.
+            smoothed_class_index = list(model.classes_).index(smoothed_prediction)
+            confidence = float(probabilities[smoothed_class_index])
 
 
             # =================================================

@@ -19,7 +19,7 @@ Hand gesture recognition using MediaPipe hand landmarks and a Random Forest clas
 3. Convert each landmark to wrist-relative coordinates and scale-normalize the 63 values.
 4. Pass the feature row to the trained Random Forest model.
 5. Display the predicted gesture and confidence in the webcam window.
-6. Append timestamped predictions to `logs/predictions.csv`.
+6. Append timestamped predictions to `logs/predictions.csv`. The logged percentage is the model probability for the displayed smoothed gesture.
 7. Review prediction history in the Streamlit dashboard.
 
 The live inference path and training feature engineering use the same normalization definition. The shared live implementation is in `src/feature_utils.py`.
@@ -83,6 +83,12 @@ pip install -r requirements.txt
 
 ## Run
 
+Collect new gesture samples (requires a working camera and the MediaPipe task asset). Existing raw data is retained and new rows are appended:
+
+```bash
+python src/collect_data.py
+```
+
 Live webcam prediction (requires a working camera and the MediaPipe task asset):
 
 ```bash
@@ -140,7 +146,7 @@ Latest successful CI run: [GitHub Actions run](https://github.com/krishankantpan
 ## Known limitations and next validation steps
 
 - Retrain the checked-in Random Forest model from the committed engineered dataset and record a held-out classification report and confusion matrix.
-- Run a real webcam session on a supported local machine. Hardware access is not available in GitHub-hosted CI.
+- Run a real webcam session on a supported local machine. Hardware access is not available in GitHub-hosted CI. Data collection and live prediction resolve project asset paths relative to the script, so they do not depend on the terminal's current directory.
 - Validate the Streamlit deployment separately. A successful local smoke test does not prove the hosted URL is live.
 - Review dependency compatibility for the local webcam stack before changing pinned package versions.
 - Obtain an independent security and privacy review before collecting or publishing identifiable camera data.

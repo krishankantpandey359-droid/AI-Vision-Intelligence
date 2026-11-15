@@ -9,7 +9,7 @@ Hand gesture recognition using MediaPipe hand landmarks and a Random Forest clas
 - The engineered feature dataset contains the same 1,000 samples, represented by 63 normalized landmark features and one label column.
 - The raw and engineered datasets have been checked row by row. Reapplying wrist-relative, scale normalization to the raw data reproduces the committed engineered values within a floating-point tolerance of 1e-7.
 - `src/feature_engineering.py` can regenerate the engineered CSV from the committed raw CSV. It validates the input before writing the output.
-- Automated CI checks validate dataset loading, shared inference preprocessing, model training/evaluation execution, Python compilation, and a Streamlit dashboard smoke test.
+- Automated CI checks validate dataset loading, shared inference preprocessing, raw-to-engineered dataset reproducibility, Python compilation, and a Streamlit dashboard smoke test.
 - Automated tests do not verify physical webcam access or real-world gesture accuracy. The stored model artifact should be retrained and evaluated from the committed data before making a current performance claim.
 
 ## Gesture pipeline

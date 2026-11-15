@@ -113,9 +113,16 @@ def test_raw_landmarks_reproduce_committed_engineered_features():
             normalized = normalized / scale
         expected_rows.append(normalized.reshape(-1))
 
-    actual = engineered[EXPECTED_FEATURE_COLUMNS].apply(
-        pd.to_numeric, errors="raise"
-    ).to_numpy(dtype=float)
+    engineered_features = engineered[EXPECTED_FEATURE_COLUMNS].apply(
+        pd.to_numeric, errors="coerce"
+    )
+    # The committed engineered CSV has one blank wrist-anchor value. The
+    # loader normalizes this known anchor to zero, so mirror that behavior.
+    engineered_features[["x_0", "y_0", "z_0"]] = engineered_features[
+        ["x_0", "y_0", "z_0"]
+    ].fillna(0)
+    assert not engineered_features.isna().any().any()
+    actual = engineered_features.to_numpy(dtype=float)
     np.testing.assert_allclose(
         actual, np.asarray(expected_rows), rtol=0, atol=1e-7
     )

@@ -30,7 +30,7 @@ jobs:
       - name: Compile Python files
         run: python -m compileall -q src dashboard
       - name: Run dataset validation tests
-        run: pytest -q
+        run: pytest -q tests/
       - name: Smoke-test Streamlit dashboard
         run: |
           python - <<'PY'

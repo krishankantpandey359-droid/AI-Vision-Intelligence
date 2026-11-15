@@ -34,12 +34,16 @@ def load_feature_dataset():
     features = frame[EXPECTED_FEATURE_COLUMNS].apply(
         pd.to_numeric, errors="coerce"
     )
+    # Wrist-relative normalization makes the anchor landmark exactly (0, 0, 0).
+    # One existing feature row has a blank x_0; normalize that known anchor only.
+    anchor_columns = ["x_0", "y_0", "z_0"]
+    features[anchor_columns] = features[anchor_columns].fillna(0)
     if features.isna().any().any():
         raise ValueError(
             "Feature dataset contains missing or non-numeric landmark values."
         )
 
-    if not features.map(lambda value: pd.notna(value) and abs(value) != float("inf")).all().all():
+    if not features.apply(lambda column: column.map(lambda value: pd.notna(value) and abs(value) != float("inf"))).all().all():
         raise ValueError("Feature dataset contains non-finite landmark values.")
 
     if frame["label"].isna().any() or frame["label"].astype(str).str.strip().eq("").any():

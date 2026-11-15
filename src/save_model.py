@@ -1,46 +1,25 @@
-import pandas as pd
+from pathlib import Path
+
 import joblib
-
-from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+
+from dataset_utils import PROJECT_ROOT, load_feature_dataset
 
 
-# Load dataset
-df = pd.read_csv("data/gesture_features.csv")
-
-# Separate features and target
-X = df.drop("label", axis=1)
-y = df["label"]
-
-
-# Train-test split
+X, y = load_feature_dataset()
 X_train, X_test, y_train, y_test = train_test_split(
-    X,
-    y,
-    test_size=0.20,
-    random_state=42,
-    stratify=y
+    X, y, test_size=0.20, random_state=42, stratify=y
 )
 
-
-# Create Random Forest model
-model = RandomForestClassifier(
-    n_estimators=200,
-    random_state=42
-)
-
-
-# Train model
+model = RandomForestClassifier(n_estimators=200, random_state=42)
 model.fit(X_train, y_train)
 
+model_path = PROJECT_ROOT / "models" / "gesture_random_forest.pkl"
+model_path.parent.mkdir(parents=True, exist_ok=True)
+joblib.dump(model, model_path)
 
-# Save trained model
-MODEL_PATH = "models/gesture_random_forest.pkl"
-
-joblib.dump(model, MODEL_PATH)
-
-
-print("\nModel training completed successfully.")
-print("Model saved at:", MODEL_PATH)
+print("\\nModel training completed successfully.")
+print("Model saved at:", model_path)
 print("Number of features:", X.shape[1])
 print("Classes:", sorted(y.unique()))

@@ -6,6 +6,8 @@ import mediapipe as mp
 import csv
 import time
 
+from feature_utils import normalize_landmarks
+
 from pathlib import Path
 from collections import deque
 
@@ -205,70 +207,11 @@ with HandLandmarker.create_from_options(options) as landmarker:
             # FEATURE ENGINEERING
             # ------------------------------------------------
 
-            wrist_x = hand[0].x
-            wrist_y = hand[0].y
-            wrist_z = hand[0].z
+            # Use the same preprocessing as the training dataset.
+            features_df = normalize_landmarks(hand)
 
-            normalized = []
-
-
-            for landmark in hand:
-
-                normalized.extend([
-                    landmark.x - wrist_x,
-                    landmark.y - wrist_y,
-                    landmark.z - wrist_z
-                ])
-
-
-            # ------------------------------------------------
-            # CONVERT TO 21 x 3
-            # ------------------------------------------------
-
-            points = np.array(
-                normalized
-            ).reshape(21, 3)
-
-
-            # ------------------------------------------------
-            # SCALE NORMALIZATION
-            # ------------------------------------------------
-
-            distances = np.sqrt(
-                points[:, 0] ** 2 +
-                points[:, 1] ** 2 +
-                points[:, 2] ** 2
-            )
-
-
-            scale = np.max(distances)
-
-
-            if scale > 0:
-
-                normalized = (
-                    np.array(normalized) / scale
-                )
-
-
-            # ------------------------------------------------
-            # FINAL 63 FEATURES
-            # ------------------------------------------------
-
-            features = np.array(
-                normalized
-            ).reshape(1, -1)
-
-
-            # =================================================
-            # ML PREDICTION
-            # =================================================
-
-            features_df = pd.DataFrame(
-                features,
-                columns=model.feature_names_in_
-            )
-
+            if list(features_df.columns) != list(model.feature_names_in_):
+                raise ValueError("Live feature columns do not match the trained model.")
 
             prediction = model.predict(
                 features_df

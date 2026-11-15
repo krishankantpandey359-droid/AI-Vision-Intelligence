@@ -126,3 +126,24 @@ def test_raw_landmarks_reproduce_committed_engineered_features():
     np.testing.assert_allclose(
         actual, np.asarray(expected_rows), rtol=0, atol=1e-7
     )
+
+def test_dataset_loader_rejects_missing_non_anchor_values(tmp_path, monkeypatch):
+    path = tmp_path / "features.csv"
+    row = {column: 0.0 for column in EXPECTED_FEATURE_COLUMNS}
+    row["y_0"] = float("nan")
+    row["label"] = "fist"
+    pd.DataFrame([row]).to_csv(path, index=False)
+    monkeypatch.setattr("dataset_utils.FEATURE_DATA_PATH", path)
+    with pytest.raises(ValueError, match="missing or non-numeric"):
+        load_feature_dataset()
+
+
+def test_dataset_loader_rejects_infinite_feature_values(tmp_path, monkeypatch):
+    path = tmp_path / "features.csv"
+    row = {column: 0.0 for column in EXPECTED_FEATURE_COLUMNS}
+    row["x_1"] = float("inf")
+    row["label"] = "fist"
+    pd.DataFrame([row]).to_csv(path, index=False)
+    monkeypatch.setattr("dataset_utils.FEATURE_DATA_PATH", path)
+    with pytest.raises(ValueError, match="non-finite"):
+        load_feature_dataset()

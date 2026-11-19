@@ -9,8 +9,10 @@ Hand gesture recognition using MediaPipe hand landmarks and a Random Forest clas
 - The engineered feature dataset contains the same 1,000 samples, represented by 63 normalized landmark features and one label column.
 - The raw and engineered datasets have been checked row by row. Reapplying wrist-relative, scale normalization to the raw data reproduces the committed engineered values within a floating-point tolerance of 1e-7.
 - `src/feature_engineering.py` can regenerate the engineered CSV from the committed raw CSV. It validates the input before writing the output.
-- Automated CI checks validate dataset loading, shared inference preprocessing, raw-to-engineered dataset reproducibility, Python compilation, and a Streamlit dashboard smoke test.
-- Automated tests do not verify physical webcam access or real-world gesture accuracy. The stored model artifact should be retrained and evaluated from the committed data before making a current performance claim.
+- Automated CI checks validate dataset loading, shared inference preprocessing, raw-to-engineered dataset reproducibility, Python compilation, model evaluation, and a Streamlit dashboard smoke test.
+- The evaluation script records a stratified 80:20 holdout result and five-fold stratified cross-validation within the 80% training partition. The held-out test set is not used to calculate cross-validation scores.
+- On the committed dataset and fixed random seed, the Random Forest achieved 98.00% accuracy, 98.00% balanced accuracy and 98.00% macro F1 on the 200-row holdout. Five-fold training-partition cross-validation averaged 98.50% accuracy (standard deviation 1.44 percentage points). These are results on this bundled dataset, not a guarantee of real-world accuracy.
+- Automated tests do not verify physical webcam access or performance on unseen people, recording sessions, cameras or lighting conditions. The dataset does not include participant or session identifiers, so related captures across the random split cannot be ruled out.
 
 ## Gesture pipeline
 
@@ -53,11 +55,13 @@ To train and save a Random Forest model from the current engineered dataset, run
 python src/save_model.py
 ```
 
-To print classification reports and confusion matrices for the four candidate models:
+To print held-out classification reports, confusion matrices and five-fold cross-validation summaries for the four candidate models:
 
 ```bash
 python src/evaluate_models.py
 ```
+
+The script writes `outputs/model_evaluation.json`. It includes the dataset SHA-256 fingerprint, split configuration, per-class metrics, confusion matrices, fold-level scores and cross-validation mean and standard deviation. Cross-validation runs only inside the training partition.
 
 Do not treat the model's probability output as a calibrated measure of real-world correctness. A high confidence score is not a substitute for an independently measured test-set result. The checked-in model file has not yet been independently matched to a recorded training run and metric report.
 
@@ -114,7 +118,7 @@ pytest -q tests/
 
 GitHub Actions compiles the Python sources, runs the tests, and smoke-tests the Streamlit dashboard on relevant pull requests and pushes.
 
-Latest successful CI run: [GitHub Actions run](https://github.com/krishankantpandey359-droid/AI-Vision-Intelligence/actions/runs/43727297001).
+Latest successful CI run: [GitHub Actions run](https://github.com/krishankantpandey359-droid/AI-Vision-Intelligence/actions/runs/44507916394).
 
 ## Repository structure
 
@@ -145,7 +149,7 @@ Latest successful CI run: [GitHub Actions run](https://github.com/krishankantpan
 
 ## Known limitations and next validation steps
 
-- Retrain the checked-in Random Forest model from the committed engineered dataset and record a held-out classification report and confusion matrix.
+- Collect a new evaluation dataset with participant and recording-session identifiers. Use group-aware train/test splitting to measure generalization to unseen people or sessions.
 - Run a real webcam session on a supported local machine. Hardware access is not available in GitHub-hosted CI. Data collection and live prediction resolve project asset paths relative to the script, so they do not depend on the terminal's current directory.
 - Validate the Streamlit deployment separately. A successful local smoke test does not prove the hosted URL is live.
 - Review dependency compatibility for the local webcam stack before changing pinned package versions.

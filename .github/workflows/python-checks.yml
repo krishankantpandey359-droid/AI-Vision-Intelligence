@@ -31,6 +31,35 @@ jobs:
         run: python -m compileall -q src dashboard
       - name: Run dataset validation tests
         run: pytest -q tests/
+      - name: Run reproducible held-out model evaluation
+        run: python src/evaluate_models.py
+      - name: Validate machine-readable evaluation report
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          report = json.loads(Path("outputs/model_evaluation.json").read_text(encoding="utf-8"))
+          assert report["samples"] == 1000
+          assert report["features"] == 63
+          assert report["split"]["train_rows"] == 800
+          assert report["split"]["test_rows"] == 200
+          assert len(report["dataset_sha256"]) == 64
+          assert set(report["models"]) == {
+              "Logistic Regression", "KNN", "Random Forest", "SVM"
+          }
+          assert report["cross_validation"]["folds"] == 5
+          for metrics in report["models"].values():
+              for key in ("accuracy", "balanced_accuracy", "macro_f1"):
+                  assert 0.0 <= metrics[key] <= 1.0
+                  cv = metrics["cross_validation"][key]
+                  assert len(cv["fold_scores"]) == 5
+                  assert all(0.0 <= score <= 1.0 for score in cv["fold_scores"])
+                  assert 0.0 <= cv["mean"] <= 1.0
+                  assert cv["std"] >= 0.0
+              assert len(metrics["confusion_matrix"]) == 5
+          print("PASS: held-out evaluation report is complete and valid.")
+          PY
       - name: Smoke-test Streamlit dashboard
         run: |
           python - <<'PY'

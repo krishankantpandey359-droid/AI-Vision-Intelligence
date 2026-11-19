@@ -118,7 +118,7 @@ pytest -q tests/
 
 GitHub Actions compiles the Python sources, runs the tests, and smoke-tests the Streamlit dashboard on relevant pull requests and pushes.
 
-Latest successful CI run: [GitHub Actions run](https://github.com/krishankantpandey359-droid/AI-Vision-Intelligence/actions/runs/43727297001).
+Latest successful CI run: [GitHub Actions run](https://github.com/krishankantpandey359-droid/AI-Vision-Intelligence/actions/runs/44507916394).
 
 ## Repository structure
 

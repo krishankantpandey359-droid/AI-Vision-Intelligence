@@ -20,6 +20,12 @@ def load_feature_dataset():
         )
 
     frame = pd.read_csv(FEATURE_DATA_PATH)
+    if frame.columns.duplicated().any():
+        duplicates = frame.columns[frame.columns.duplicated()].astype(str).tolist()
+        raise ValueError(
+            "Feature dataset contains duplicate column names: "
+            + ", ".join(duplicates)
+        )
     required = EXPECTED_FEATURE_COLUMNS + ["label"]
     missing = [column for column in required if column not in frame.columns]
 
@@ -54,7 +60,8 @@ def load_feature_dataset():
     if not np.allclose(anchor, 0.0, rtol=0.0, atol=1e-12):
         raise ValueError("Wrist-relative anchor coordinates must all equal zero.")
 
-    if frame["label"].isna().any() or frame["label"].astype(str).str.strip().eq("").any():
+    labels = frame["label"].astype("string").str.strip()
+    if labels.isna().any() or labels.eq("").any():
         raise ValueError("Feature dataset contains missing gesture labels.")
 
-    return features, frame["label"].astype(str)
+    return features, labels.astype(str)

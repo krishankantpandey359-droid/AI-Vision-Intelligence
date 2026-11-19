@@ -170,3 +170,23 @@ def test_dataset_loader_requires_all_wrist_anchor_coordinates_to_be_zero(tmp_pat
     monkeypatch.setattr("dataset_utils.FEATURE_DATA_PATH", path)
     with pytest.raises(ValueError, match="anchor coordinates must all equal zero"):
         load_feature_dataset()
+
+
+def test_dataset_loader_trims_label_whitespace(tmp_path, monkeypatch):
+    path = tmp_path / "features.csv"
+    row = {column: 0.0 for column in EXPECTED_FEATURE_COLUMNS}
+    row["label"] = "  fist  "
+    pd.DataFrame([row]).to_csv(path, index=False)
+    monkeypatch.setattr("dataset_utils.FEATURE_DATA_PATH", path)
+    _, labels = load_feature_dataset()
+    assert labels.tolist() == ["fist"]
+
+
+def test_dataset_loader_rejects_duplicate_column_names(tmp_path, monkeypatch):
+    path = tmp_path / "features.csv"
+    columns = EXPECTED_FEATURE_COLUMNS + ["label", "label"]
+    row = [0.0] * len(EXPECTED_FEATURE_COLUMNS) + ["fist", "fist"]
+    pd.DataFrame([row], columns=columns).to_csv(path, index=False)
+    monkeypatch.setattr("dataset_utils.FEATURE_DATA_PATH", path)
+    with pytest.raises(ValueError, match="duplicate column names"):
+        load_feature_dataset()

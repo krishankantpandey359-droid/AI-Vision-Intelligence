@@ -9,7 +9,7 @@ Hand gesture recognition using MediaPipe hand landmarks and a Random Forest clas
 - The engineered feature dataset contains the same 1,000 samples, represented by 63 normalized landmark features and one label column.
 - The raw and engineered datasets have been checked row by row. Reapplying wrist-relative, scale normalization to the raw data reproduces the committed engineered values within a floating-point tolerance of 1e-7.
 - `src/feature_engineering.py` can regenerate the engineered CSV from the committed raw CSV. It validates the input before writing the output.
-- Automated CI checks validate dataset loading, shared inference preprocessing, raw-to-engineered dataset reproducibility, Python compilation, and a Streamlit dashboard smoke test.
+- Automated CI checks validate dataset loading, shared inference preprocessing, raw-to-engineered dataset reproducibility, Python compilation, and a Streamlit dashboard smoke test. CI evaluates the committed model before retraining, then evaluates the freshly trained model on the same deterministic stratified held-out split.
 - Automated tests do not verify physical webcam access or real-world gesture accuracy. The stored model artifact should be retrained and evaluated from the committed data before making a current performance claim.
 
 ## Gesture pipeline
@@ -52,6 +52,8 @@ To train and save a Random Forest model from the current engineered dataset, run
 ```bash
 python src/save_model.py
 ```
+
+This command also writes a held-out evaluation report to `outputs/retrained_model/metrics.json` and `outputs/retrained_model/confusion_matrix.csv`.
 
 To print classification reports and confusion matrices for the four candidate models:
 
@@ -112,9 +114,9 @@ python -m pip install pandas numpy scikit-learn streamlit pytest
 pytest -q tests/
 ```
 
-GitHub Actions compiles the Python sources, runs the tests, and smoke-tests the Streamlit dashboard on relevant pull requests and pushes.
+GitHub Actions evaluates the committed model first, runs the tests, retrains a fresh Random Forest, saves separate held-out metrics and confusion matrices for both models, and smoke-tests the Streamlit dashboard. The retrained model is a CI-runner artifact and is not automatically committed.
 
-Latest successful CI run: [GitHub Actions run](https://github.com/krishankantpandey359-droid/AI-Vision-Intelligence/actions/runs/43727297001).
+Latest successful CI run: check the current [GitHub Actions history](https://github.com/krishankantpandey359-droid/AI-Vision-Intelligence/actions).
 
 ## Repository structure
 

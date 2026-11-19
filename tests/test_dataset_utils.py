@@ -147,3 +147,26 @@ def test_dataset_loader_rejects_infinite_feature_values(tmp_path, monkeypatch):
     monkeypatch.setattr("dataset_utils.FEATURE_DATA_PATH", path)
     with pytest.raises(ValueError, match="non-finite"):
         load_feature_dataset()
+
+
+def test_dataset_loader_rejects_missing_x_anchor_when_other_anchor_values_are_nonzero(tmp_path, monkeypatch):
+    path = tmp_path / "features.csv"
+    row = {column: 0.0 for column in EXPECTED_FEATURE_COLUMNS}
+    row["x_0"] = float("nan")
+    row["y_0"] = 0.25
+    row["label"] = "fist"
+    pd.DataFrame([row]).to_csv(path, index=False)
+    monkeypatch.setattr("dataset_utils.FEATURE_DATA_PATH", path)
+    with pytest.raises(ValueError, match="zero-valued wrist anchor"):
+        load_feature_dataset()
+
+
+def test_dataset_loader_requires_all_wrist_anchor_coordinates_to_be_zero(tmp_path, monkeypatch):
+    path = tmp_path / "features.csv"
+    row = {column: 0.0 for column in EXPECTED_FEATURE_COLUMNS}
+    row["z_0"] = 0.1
+    row["label"] = "fist"
+    pd.DataFrame([row]).to_csv(path, index=False)
+    monkeypatch.setattr("dataset_utils.FEATURE_DATA_PATH", path)
+    with pytest.raises(ValueError, match="anchor coordinates must all equal zero"):
+        load_feature_dataset()

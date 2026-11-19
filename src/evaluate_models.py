@@ -133,6 +133,11 @@ def main():
         print(f"{name}: accuracy={metrics['accuracy']:.4f}, "
               f"balanced_accuracy={metrics['balanced_accuracy']:.4f}, "
               f"macro_f1={metrics['macro_f1']:.4f}")
+        for metric, cv_summary in metrics["cross_validation"].items():
+            print(
+                f"  CV {metric}: {cv_summary['mean']:.4f} "
+                f"+/- {cv_summary['std']:.4f}"
+            )
 
     output = PROJECT_ROOT / "outputs" / "model_evaluation.json"
     output.parent.mkdir(parents=True, exist_ok=True)

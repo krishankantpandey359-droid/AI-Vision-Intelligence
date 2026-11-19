@@ -1,3 +1,4 @@
+import csv
 from pathlib import Path
 
 import numpy as np
@@ -19,13 +20,21 @@ def load_feature_dataset():
             f"Feature dataset not found: {FEATURE_DATA_PATH}"
         )
 
-    frame = pd.read_csv(FEATURE_DATA_PATH)
-    if frame.columns.duplicated().any():
-        duplicates = frame.columns[frame.columns.duplicated()].astype(str).tolist()
+    with FEATURE_DATA_PATH.open("r", encoding="utf-8-sig", newline="") as handle:
+        header = next(csv.reader(handle), [])
+    if len(header) != len(set(header)):
+        seen = set()
+        duplicates = []
+        for name in header:
+            if name in seen and name not in duplicates:
+                duplicates.append(name)
+            seen.add(name)
         raise ValueError(
             "Feature dataset contains duplicate column names: "
             + ", ".join(duplicates)
         )
+
+    frame = pd.read_csv(FEATURE_DATA_PATH)
     required = EXPECTED_FEATURE_COLUMNS + ["label"]
     missing = [column for column in required if column not in frame.columns]
 

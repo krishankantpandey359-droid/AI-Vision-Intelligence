@@ -19,7 +19,7 @@ from sklearn.metrics import (
     confusion_matrix,
     f1_score,
 )
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import StratifiedKFold, cross_validate, train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -30,6 +30,7 @@ from dataset_utils import PROJECT_ROOT, load_feature_dataset
 
 RANDOM_STATE = 42
 TEST_SIZE = 0.20
+CV_FOLDS = 5
 
 
 def main():
@@ -72,14 +73,41 @@ def main():
             "train_rows": int(len(y_train)),
             "test_rows": int(len(y_test)),
         },
+        "cross_validation": {
+            "strategy": "stratified_k_fold_on_training_partition_only",
+            "folds": CV_FOLDS,
+            "shuffle": True,
+            "random_state": RANDOM_STATE,
+            "metrics": ["accuracy", "balanced_accuracy", "macro_f1"],
+        },
         "models": {},
         "interpretation": (
-            "This is a single held-out split of the bundled dataset. "
-            "It does not measure webcam or real-world performance."
+            "The held-out metrics use one stratified split. Cross-validation is "
+            "performed only within the training partition. Samples have no "
+            "recorded participant/session identifier, so random splitting may "
+            "place related captures in both partitions. Results do not establish "
+            "performance on unseen people, cameras, lighting, or real-world use."
         ),
     }
 
+    scoring = {
+        "accuracy": "accuracy",
+        "balanced_accuracy": "balanced_accuracy",
+        "macro_f1": "f1_macro",
+    }
+
     for name, estimator in models.items():
+        cv_results = cross_validate(
+            estimator,
+            X_train,
+            y_train,
+            cv=StratifiedKFold(
+                n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE
+            ),
+            scoring=scoring,
+            return_train_score=False,
+            n_jobs=-1,
+        )
         estimator.fit(X_train, y_train)
         predictions = estimator.predict(X_test)
         metrics = {
@@ -92,6 +120,14 @@ def main():
             "confusion_matrix": confusion_matrix(
                 y_test, predictions, labels=labels
             ).tolist(),
+            "cross_validation": {
+                metric: {
+                    "fold_scores": cv_results[f"test_{metric}"].tolist(),
+                    "mean": float(cv_results[f"test_{metric}"].mean()),
+                    "std": float(cv_results[f"test_{metric}"].std(ddof=1)),
+                }
+                for metric in scoring
+            },
         }
         report["models"][name] = metrics
         print(f"{name}: accuracy={metrics['accuracy']:.4f}, "

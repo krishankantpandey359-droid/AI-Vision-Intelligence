@@ -29,7 +29,9 @@ jobs:
         run: python -m pip install --upgrade pip pandas numpy scikit-learn streamlit pytest
       - name: Compile Python files
         run: python -m compileall -q src dashboard
-      - name: Run dataset validation tests
+      - name: Retrain Random Forest from committed engineered data
+        run: python src/save_model.py
+      - name: Run dataset validation and model tests
         run: pytest -q tests/
       - name: Smoke-test Streamlit dashboard
         run: |

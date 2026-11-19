@@ -60,6 +60,13 @@ def main():
     dataset_path = PROJECT_ROOT / "data" / "gesture_features.csv"
     dataset_hash = hashlib.sha256(dataset_path.read_bytes()).hexdigest()
     labels = sorted(y.unique().tolist())
+    minimum_class_count = int(y.value_counts().min())
+    effective_cv_folds = min(CV_FOLDS, minimum_class_count)
+    if effective_cv_folds < 2:
+        raise ValueError(
+            "At least two samples per gesture class are required for stratified "
+            "cross-validation. Collect more samples before comparing models."
+        )
     report = {
         "dataset": dataset_path.relative_to(PROJECT_ROOT).as_posix(),
         "dataset_sha256": dataset_hash,
@@ -75,7 +82,7 @@ def main():
         },
         "cross_validation": {
             "strategy": "stratified_k_fold_on_training_partition_only",
-            "folds": CV_FOLDS,
+            "folds": effective_cv_folds,
             "shuffle": True,
             "random_state": RANDOM_STATE,
             "metrics": ["accuracy", "balanced_accuracy", "macro_f1"],
@@ -102,7 +109,7 @@ def main():
             X_train,
             y_train,
             cv=StratifiedKFold(
-                n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE
+                n_splits=effective_cv_folds, shuffle=True, random_state=RANDOM_STATE
             ),
             scoring=scoring,
             return_train_score=False,

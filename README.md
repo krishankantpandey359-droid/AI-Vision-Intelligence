@@ -10,7 +10,7 @@ Hand gesture recognition using MediaPipe hand landmarks and a Random Forest clas
 - The raw and engineered datasets have been checked row by row. Reapplying wrist-relative, scale normalization to the raw data reproduces the committed engineered values within a floating-point tolerance of 1e-7.
 - `src/feature_engineering.py` can regenerate the engineered CSV from the committed raw CSV. It validates the input before writing the output.
 - Automated CI checks validate dataset loading, shared inference preprocessing, raw-to-engineered dataset reproducibility, Python compilation, and a Streamlit dashboard smoke test. CI evaluates the committed model before retraining, then evaluates the freshly trained model on the same deterministic stratified held-out split.
-- Automated tests do not verify physical webcam access or real-world gesture accuracy. The stored model artifact should be retrained and evaluated from the committed data before making a current performance claim.
+- The current CI workflow has evaluated both the committed model and a freshly trained Random Forest on the same deterministic stratified 20% holdout (200 samples). Both reports show 98.00% accuracy on this dataset split. These are held-out sample results, not independent-user, real-world or webcam accuracy. The original historical training provenance of the committed `.pkl` is still not established.
 
 ## Gesture pipeline
 
@@ -61,7 +61,7 @@ To print classification reports and confusion matrices for the four candidate mo
 python src/evaluate_models.py
 ```
 
-Do not treat the model's probability output as a calibrated measure of real-world correctness. A high confidence score is not a substitute for an independently measured test-set result. The checked-in model file has not yet been independently matched to a recorded training run and metric report.
+Do not treat the model's probability output as a calibrated measure of real-world correctness. A high confidence score is not a substitute for independent testing. The checked-in model is evaluated by CI and its current report is recorded, but the historical training run that originally produced the committed `.pkl` has not been documented. See `MODEL_CARD.md` for the exact split and limitations.
 
 ## Setup
 
@@ -147,7 +147,7 @@ Latest successful CI run: [held-out evaluation workflow](https://github.com/kris
 
 ## Known limitations and next validation steps
 
-- Retrain the checked-in Random Forest model from the committed engineered dataset and record a held-out classification report and confusion matrix.
+- Record the historical training command, training data version and model hash whenever the committed `.pkl` is regenerated. The original provenance of the currently committed artifact remains unknown.
 - Run a real webcam session on a supported local machine. Hardware access is not available in GitHub-hosted CI. Data collection and live prediction resolve project asset paths relative to the script, so they do not depend on the terminal's current directory.
 - Validate the Streamlit deployment separately. A successful local smoke test does not prove the hosted URL is live.
 - Review dependency compatibility for the local webcam stack before changing pinned package versions.

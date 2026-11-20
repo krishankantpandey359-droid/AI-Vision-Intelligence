@@ -61,3 +61,8 @@ python src/save_model.py
 ```
 
 The script trains a Random Forest from the committed engineered dataset, writes a model file, and saves held-out metrics in `outputs/retrained_model/`. The script overwrites the local model path. Review the output, preserve the evaluation report, and verify changes before committing a replacement model.
+
+
+## Independent evaluation status
+
+A group-aware evaluation is not currently possible from the committed CSV schema. The raw and engineered files contain no participant, session, source-video, or capture-device identifiers. Do not infer groups from row order or claim the existing 98% random-row holdout is independent-user performance. See [`docs/INDEPENDENT_EVALUATION_PROTOCOL.md`](docs/INDEPENDENT_EVALUATION_PROTOCOL.md) for the metadata to collect and the recommended participant-held-out and session-held-out evaluation design.

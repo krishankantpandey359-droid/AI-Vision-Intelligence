@@ -61,7 +61,7 @@ To print classification reports and confusion matrices for the four candidate mo
 python src/evaluate_models.py
 ```
 
-Do not treat the model's probability output as a calibrated measure of real-world correctness. A high confidence score is not a substitute for independent testing. The checked-in model is evaluated by CI and its current report is recorded, but the historical training run that originally produced the committed `.pkl` has not been documented. See `MODEL_CARD.md` for the exact split and limitations.
+Do not treat the model's probability output as a calibrated measure of real-world correctness. A high confidence score is not a substitute for independent testing. The checked-in model is evaluated by CI and its current report is recorded, but the historical training run that originally produced the committed `.pkl` has not been documented. See `MODEL_CARD.md` for the exact split and limitations. See [`docs/INDEPENDENT_EVALUATION_PROTOCOL.md`](docs/INDEPENDENT_EVALUATION_PROTOCOL.md) for the required group metadata and a participant/session-independent validation plan. The current dataset has no group identifiers, so a group-aware score is not yet available.
 
 ## Setup
 

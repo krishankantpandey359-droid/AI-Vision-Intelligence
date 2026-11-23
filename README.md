@@ -55,11 +55,15 @@ python src/save_model.py
 
 This command also writes a held-out evaluation report to `outputs/retrained_model/metrics.json` and `outputs/retrained_model/confusion_matrix.csv`.
 
-To print classification reports and confusion matrices for the four candidate models:
+To compare Logistic Regression, K-Nearest Neighbors, Random Forest and Support Vector Machine with a reproducible held-out evaluation and five-fold stratified cross-validation:
 
 ```bash
 python src/evaluate_models.py
 ```
+
+The script creates `outputs/model_evaluation.json`. It records the dataset SHA-256 fingerprint, class counts, stratified 80/20 split, per-class reports, confusion matrices, and fold-level metrics with cross-validation means and standard deviations. Cross-validation runs only inside the 80% training partition. The held-out 20% is excluded from cross-validation and model selection.
+
+This candidate-model comparison is separate from the committed-model check. CI first evaluates the checked-in `models/gesture_random_forest.pkl` with `src/evaluate_committed_model.py`, then runs the candidate comparison, and only afterwards retrains a fresh Random Forest with `src/save_model.py`. The committed model file is not replaced by the candidate comparison. CI uploads the candidate JSON report alongside the committed and retrained model reports.
 
 Do not treat the model's probability output as a calibrated measure of real-world correctness. A high confidence score is not a substitute for independent testing. The checked-in model is evaluated by CI and its current report is recorded, but the historical training run that originally produced the committed `.pkl` has not been documented. See `MODEL_CARD.md` for the exact split and limitations. See [`docs/INDEPENDENT_EVALUATION_PROTOCOL.md`](docs/INDEPENDENT_EVALUATION_PROTOCOL.md) for the required group metadata and a participant/session-independent validation plan. The current dataset has no group identifiers, so a group-aware score is not yet available.
 

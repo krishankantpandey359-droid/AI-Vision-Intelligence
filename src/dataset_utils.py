@@ -1,5 +1,7 @@
+import csv
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -16,6 +18,20 @@ def load_feature_dataset():
     if not FEATURE_DATA_PATH.is_file():
         raise FileNotFoundError(
             f"Feature dataset not found: {FEATURE_DATA_PATH}"
+        )
+
+    with FEATURE_DATA_PATH.open("r", encoding="utf-8-sig", newline="") as handle:
+        header = next(csv.reader(handle), [])
+    if len(header) != len(set(header)):
+        seen = set()
+        duplicates = []
+        for name in header:
+            if name in seen and name not in duplicates:
+                duplicates.append(name)
+            seen.add(name)
+        raise ValueError(
+            "Feature dataset contains duplicate column names: "
+            + ", ".join(duplicates)
         )
 
     frame = pd.read_csv(FEATURE_DATA_PATH)
@@ -35,17 +51,26 @@ def load_feature_dataset():
         pd.to_numeric, errors="coerce"
     )
     # Wrist-relative normalization makes the anchor landmark exactly (0, 0, 0).
-    # One existing feature row has a blank x_0; normalize that known anchor only.
-    features["x_0"] = features["x_0"].fillna(0)
+    # Permit the single documented blank x_0 only when the other anchor
+    # coordinates confirm the same zero-valued wrist anchor.
+    missing_x_anchor = features["x_0"].isna()
+    if (missing_x_anchor & (features["y_0"].ne(0) | features["z_0"].ne(0))).any():
+        raise ValueError("A missing x_0 is only valid for a zero-valued wrist anchor.")
+    features.loc[missing_x_anchor, "x_0"] = 0.0
     if features.isna().any().any():
         raise ValueError(
             "Feature dataset contains missing or non-numeric landmark values."
         )
 
-    if not features.apply(lambda column: column.map(lambda value: pd.notna(value) and abs(value) != float("inf"))).all().all():
+    values = features.to_numpy(dtype=float)
+    if not np.isfinite(values).all():
         raise ValueError("Feature dataset contains non-finite landmark values.")
+    anchor = features[["x_0", "y_0", "z_0"]].to_numpy(dtype=float)
+    if not np.allclose(anchor, 0.0, rtol=0.0, atol=1e-12):
+        raise ValueError("Wrist-relative anchor coordinates must all equal zero.")
 
-    if frame["label"].isna().any() or frame["label"].astype(str).str.strip().eq("").any():
+    labels = frame["label"].astype("string").str.strip()
+    if labels.isna().any() or labels.eq("").any():
         raise ValueError("Feature dataset contains missing gesture labels.")
 
-    return features, frame["label"].astype(str)
+    return features, labels.astype(str)

@@ -120,7 +120,7 @@ pytest -q tests/
 
 GitHub Actions evaluates the committed model first, runs the tests, retrains a fresh Random Forest, saves separate held-out metrics and confusion matrices for both models, and smoke-tests the Streamlit dashboard. The retrained model is a CI-runner artifact and is not automatically committed.
 
-Latest successful CI run: [held-out evaluation workflow](https://github.com/krishankantpandey359-droid/AI-Vision-Intelligence/actions/runs/44596649004). Download the `ai-vision-heldout-evaluation` artifact from that run to inspect the committed-model and freshly retrained-model metrics and confusion matrices.
+Latest successful CI run: [GitHub Actions run #45308866069](https://github.com/krishankantpandey359-droid/AI-Vision-Intelligence/actions/runs/45308866069). The run validates the merged evaluation workflow. Download its `ai-vision-heldout-evaluation` artifact, when retained, to inspect the committed-model, candidate-model and freshly retrained-model reports.
 
 ## Repository structure
 

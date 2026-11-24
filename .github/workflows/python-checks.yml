@@ -35,6 +35,40 @@ jobs:
         run: python src/evaluate_committed_model.py
       - name: Run dataset and evaluation tests
         run: pytest -q tests/
+      - name: Run reproducible candidate model evaluation
+        run: python src/evaluate_models.py
+      - name: Validate candidate evaluation report
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          report = json.loads(
+              Path("outputs/model_evaluation.json").read_text(encoding="utf-8")
+          )
+          assert report["samples"] == 1000
+          assert report["features"] == 63
+          assert report["split"]["train_rows"] == 800
+          assert report["split"]["test_rows"] == 200
+          assert len(report["dataset_sha256"]) == 64
+          assert report["cross_validation"]["folds"] == 5
+          assert set(report["models"]) == {
+              "Logistic Regression", "KNN", "Random Forest", "SVM"
+          }
+          class_count = len(report["class_counts"])
+          for metrics in report["models"].values():
+              for key in ("accuracy", "balanced_accuracy", "macro_f1"):
+                  assert 0.0 <= metrics[key] <= 1.0
+                  cv = metrics["cross_validation"][key]
+                  assert len(cv["fold_scores"]) == 5
+                  assert all(0.0 <= score <= 1.0 for score in cv["fold_scores"])
+                  assert 0.0 <= cv["mean"] <= 1.0
+                  assert cv["std"] >= 0.0
+              matrix = metrics["confusion_matrix"]
+              assert len(matrix) == class_count
+              assert all(len(row) == class_count for row in matrix)
+          print("PASS: candidate model evaluation report is complete and valid.")
+          PY
       - name: Retrain Random Forest from committed engineered data
         run: python src/save_model.py
       - name: Smoke-test Streamlit dashboard
@@ -53,5 +87,6 @@ jobs:
             outputs/committed_model/confusion_matrix.csv
             outputs/retrained_model/metrics.json
             outputs/retrained_model/confusion_matrix.csv
+            outputs/model_evaluation.json
           if-no-files-found: error
           retention-days: 14

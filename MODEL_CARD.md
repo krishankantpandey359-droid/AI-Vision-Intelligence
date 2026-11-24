@@ -12,7 +12,7 @@
 
 ## Current CI evaluation
 
-GitHub Actions run [44596649004](https://github.com/krishankantpandey359-droid/AI-Vision-Intelligence/actions/runs/44596649004) evaluated:
+The original detailed two-model metrics below were produced by GitHub Actions run [44596649004](https://github.com/krishankantpandey359-droid/AI-Vision-Intelligence/actions/runs/44596649004). The latest post-merge validation run is [45308866069](https://github.com/krishankantpandey359-droid/AI-Vision-Intelligence/actions/runs/45308866069). Do not treat the newer run as a replacement for the historical metric artifact unless its reports are downloaded and independently compared. The original run evaluated:
 
 1. The committed `models/gesture_random_forest.pkl` before the workflow retrained anything.
 2. A fresh Random Forest trained by `src/save_model.py` during the same run.

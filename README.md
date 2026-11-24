@@ -65,7 +65,7 @@ The script creates `outputs/model_evaluation.json`. It records the dataset SHA-2
 
 This candidate-model comparison is separate from the committed-model check. CI first evaluates the checked-in `models/gesture_random_forest.pkl` with `src/evaluate_committed_model.py`, then runs the candidate comparison, and only afterwards retrains a fresh Random Forest with `src/save_model.py`. The committed model file is not replaced by the candidate comparison. CI uploads the candidate JSON report alongside the committed and retrained model reports.
 
-Do not treat the model's probability output as a calibrated measure of real-world correctness. A high confidence score is not a substitute for independent testing. The checked-in model is evaluated by CI and its current report is recorded, but the historical training run that originally produced the committed `.pkl` has not been documented. See `MODEL_CARD.md` for the exact split and limitations. See [`docs/INDEPENDENT_EVALUATION_PROTOCOL.md`](docs/INDEPENDENT_EVALUATION_PROTOCOL.md) for the required group metadata and a participant/session-independent validation plan. The current dataset has no group identifiers, so a group-aware score is not yet available.
+Do not treat the model's probability output as a calibrated measure of real-world correctness. A high confidence score is not a substitute for independent testing. The checked-in model is evaluated by CI and its current report is recorded, but the historical training run that originally produced the committed `.pkl` has not been documented. See `MODEL_CARD.md` for the exact split and limitations. See [`docs/INDEPENDENT_EVALUATION_PROTOCOL.md`](docs/INDEPENDENT_EVALUATION_PROTOCOL.md) for the required group metadata and a participant/session-independent validation plan. The current dataset has no group identifiers, so a participant-independent or session-independent score is not yet available.
 
 ## Setup
 
@@ -137,16 +137,23 @@ Latest successful CI run: [GitHub Actions run #45308866069](https://github.com/k
 │   ├── gesture_random_forest.pkl
 │   └── hand_landmarker.task
 ├── src/
+│   ├── camera_test.py
+│   ├── collect_data.py
 │   ├── dataset_utils.py
-│   ├── feature_utils.py
-│   ├── feature_engineering.py
-│   ├── train_models.py
+│   ├── evaluate_committed_model.py
 │   ├── evaluate_models.py
-│   ├── save_model.py
+│   ├── extract_landmarks.py
+│   ├── feature_engineering.py
+│   ├── feature_utils.py
+│   ├── model_evaluation.py
 │   ├── predict_live.py
-│   └── camera_test.py
+│   ├── save_model.py
+│   ├── train_models.py
+│   └── train_test_split.py
 └── tests/
-    └── test_dataset_utils.py
+    ├── test_dataset_utils.py
+    ├── test_model_artifact.py
+    └── test_model_pipeline.py
 ```
 
 ## Known limitations and next validation steps

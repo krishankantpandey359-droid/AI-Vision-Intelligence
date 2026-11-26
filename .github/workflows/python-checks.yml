@@ -19,6 +19,9 @@ on:
       - "models/gesture_random_forest.pkl"
       - ".github/workflows/python-checks.yml"
 
+permissions:
+  contents: read
+
 jobs:
   checks:
     runs-on: ubuntu-latest
